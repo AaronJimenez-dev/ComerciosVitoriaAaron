@@ -4,11 +4,9 @@ require_once __DIR__ . '/../models/ComerciosModel.php';
 
 class ImagenesController extends BaseController {
     
-    public static function CogerImagenesDeAnuncios($anuncios) {
+    public static function getByAnuncio($anuncio) {
         //Por cada anuncio que me ha llegado, cojo las imagenes que estén relacionadas
-        foreach ($anuncios as $anuncio){
-            array_push($imagenes,ImagenesModel::getAll($anuncio['id']));
-        }
+        $imagenes = ImagenesModel::getByAnuncio($anuncio['id']);
         return $imagenes;
     }
     

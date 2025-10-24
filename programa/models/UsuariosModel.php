@@ -13,7 +13,7 @@ class UsuariosModel {
 
     public static function getDatosContacto($id_usuario) {
     $dbh = Database::getConnection();
-    $stmt = $dbh->prepare("SELECT id, email, telefono 
+    $stmt = $dbh->prepare("SELECT email, telefono 
                            FROM usuarios 
                            WHERE id = :id_usuario");
     $stmt->execute(['id_usuario' => $id_usuario]);

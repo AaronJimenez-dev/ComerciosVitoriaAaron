@@ -1,18 +1,15 @@
 <?php
 require_once __DIR__ . '/Database.php';
-require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/../config/config.php';
 
 class ImagenesModel {
-    
-    public static function getAll($id_anuncio) {
+
+    // Devuelve todas las imágenes de un anuncio específico
+    public static function getByAnuncio($id_anuncio) {
         $dbh = Database::getConnection();
-        $stmt = $dbh->prepare("SELECT id,ruta
-                                FROM imagenes
-                                WHERE id_anuncio = :id_anuncio");
-        $stmt->execute([
-            'id_anuncio' => $id_anuncio
-        ]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $dbh->prepare("SELECT id,ruta FROM imagenes WHERE id_anuncio = :id_anuncio");
+        $stmt->execute(['id_anuncio' => $id_anuncio]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Devuelve array vacío si no hay imágenes
     }
 
     public static function getById($id) {
@@ -54,28 +51,29 @@ class ImagenesModel {
         comprobbamos que realmente se ha guardado.
         */
         $subidasCorrectas = 0;
-        foreach ($imagenes['tmp_name'] as $index => $carpetaTemporal)
-        if (is_uploaded_file($carpetaTemporal)) {
+        foreach ($imagenes['tmp_name'] as $index => $carpetaTemporal){
+            if (is_uploaded_file($carpetaTemporal)) {
 
-            //Aqui usamos basename para coger solo el nombre de la imagen, sin la ruta tmp_name
-            $nombreArchivo = basename($imagenes['name'][$index]);
+                //Aqui usamos basename para coger solo el nombre de la imagen, sin la ruta tmp_name
+                $nombreArchivo = basename($imagenes['name'][$index]);
 
-            $destino = MEDIA_FOLDER . $id_anuncio . '/' . $nombreArchivo;
+                $destino = MEDIA_FOLDER . $id_anuncio . '/' . $nombreArchivo;
 
-            if (move_uploaded_file($carpetaTemporal, $destino)):
-                $stmt = $dbh->prepare("
-                    INSERT INTO imagenes (id_anuncio, ruta)
-                    VALUES (:id_anuncio, :ruta)
-                ");
+                if (move_uploaded_file($carpetaTemporal, $destino)):
+                    $stmt = $dbh->prepare("
+                        INSERT INTO imagenes (id_anuncio, ruta)
+                        VALUES (:id_anuncio, :ruta)
+                    ");
 
-                if ($stmt->execute([
-                    'id_anuncio' => $id_anuncio,
-                    'ruta' => $destino
-                ])) {
-                    $subidasCorrectas++;
-                }
+                    if ($stmt->execute([
+                        'id_anuncio' => $id_anuncio,
+                        'ruta' => $destino
+                    ])) {
+                        $subidasCorrectas++;
+                    }
 
-            endif;
+                endif;
+            }
         }
         return $subidasCorrectas;
     }
@@ -90,7 +88,7 @@ class ImagenesModel {
     
     public static function deleteById($id) {
         $dbh = Database::getConnection();
-        $ruta = self::getById($id)['ruta'];
+        $ruta = self::getById($id)["ruta"]  ;
         
         self::eliminarImagenServidor($ruta);
 
@@ -106,7 +104,7 @@ class ImagenesModel {
     
     public static function deleteAll($id_anuncio) {
         $dbh = Database::getConnection();
-        foreach (self::getAll($id_anuncio) as $imagen){
+        foreach (self::getByAnuncio($id_anuncio) as $imagen){
             self::eliminarImagenServidor($imagen['ruta']);
         }
 
@@ -121,9 +119,10 @@ class ImagenesModel {
 
     public static function edit($id,$imagenesNuevas,$imagenesBorrar) {
         $dbh = Database::getConnection();
-        self::create($dbh,$imagenesNuevas,$id);
-        foreach($imagenesBorrar as $imagen){
-            self::deleteById($imagen['id']);
+        if($imagenesNuevas["error"][0] == 0)
+            self::create($dbh,$imagenesNuevas,$id);
+        foreach($imagenesBorrar as $imagenId){
+            self::deleteById($imagenId);
         }
     }
 }

@@ -6,7 +6,8 @@ class ComerciosModel {
     public static function getAll() {
         $dbh = Database::getConnection();
         $stmt = $dbh->prepare("SELECT *
-                                FROM anuncios");
+                                FROM anuncios
+                                WHERE estado = 1");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -28,15 +29,16 @@ class ComerciosModel {
                             values (:titulo,:descripcion,:direccion,:precio,:id_usuario,:id_categoria,true)"
         );
         $data = array(
-            "titulo" => $datos[0],
-            "descripcion" => $datos[1],
-            "direccion" => $datos[2],
-            "precio" => $datos[3],
-            "id_usuario" => $datos[4],
-            "id_categoria" => $datos[5]
+            "titulo" => $datos["titulo"], 
+            "descripcion" => $datos["descripcion"], 
+            "direccion" => $datos["direccion"], 
+            "precio" => $datos["precio"], 
+            "id_usuario" => $datos["id_usuario"], 
+            "id_categoria" => $datos["id_categoria"]
         );
         if($stmt->execute($data)){
-            if(!empty($imagenes))
+            echo "correcto";
+            if ($imagenes && isset($imagenes['tmp_name'])) 
                 ImagenesModel::create($dbh,$imagenes);
         }else{
             throw new Exception("No se pudo añadir el anuncio a la base de datos");
@@ -80,5 +82,18 @@ class ComerciosModel {
             "id_categoria" => $datos[5]
         );
         if(!$stmt->execute($data)) throw new Exception("No se pudo editar el anuncio");
+    }
+
+    public static function desactivar($id,$desactivar) {
+        $dbh = Database::getConnection();
+        $stmt= $dbh->prepare("UPDATE anuncios
+                            SET estado = :desactivar
+                            WHERE id = :id"
+        );
+        $data = array(
+            "id" => $id,
+            "desactivar" => $desactivar
+        );
+        if(!$stmt->execute($data)) throw new Exception("No se pudo editar el estado del anuncio");
     }
 }

@@ -3,10 +3,6 @@ require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../models/MensajesModel.php';
 
 class MensajesController extends BaseController {
-
-    public function index(){
-        $this -> render('vista.mensajes.php');
-    }
     
     public static function getConversaciones(){
         header('Content-Type: application/json');
